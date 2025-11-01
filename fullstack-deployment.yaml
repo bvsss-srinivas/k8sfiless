@@ -27,6 +27,7 @@ spec:
       labels:
         app: mysql
     spec:
+      restartPolicy: Always
       containers:
         - name: mysql
           image: mysql:8.0
@@ -40,6 +41,11 @@ spec:
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
@@ -63,20 +69,25 @@ spec:
       labels:
         app: backend
     spec:
+      restartPolicy: Always
       containers:
         - name: backend
           image: bvssssrinivas/k8sbes104a:v2
+          command: ["/bin/sh"]
+          args: ["-c", "sleep 25 && java -jar app.jar"]
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql:3306/ecommerce
+              value: jdbc:mysql://mysql:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true
             - name: SPRING_DATASOURCE_USERNAME
               value: root
             - name: SPRING_DATASOURCE_PASSWORD
               value: root
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: update
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+              value: org.hibernate.dialect.MySQL8Dialect
 
 # =========================
 # Frontend Deployment
@@ -96,6 +107,7 @@ spec:
       labels:
         app: frontend
     spec:
+      restartPolicy: Always
       containers:
         - name: frontend
           image: bvssssrinivas/k8sfes104a:v2
