@@ -27,7 +27,6 @@ spec:
       labels:
         app: mysql
     spec:
-      restartPolicy: Always
       containers:
         - name: mysql
           image: mysql:8.0
@@ -41,16 +40,6 @@ spec:
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
-          readinessProbe:
-            exec:
-              command: ["mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
-            initialDelaySeconds: 20
-            periodSeconds: 10
-          livenessProbe:
-            exec:
-              command: ["mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
-            initialDelaySeconds: 30
-            periodSeconds: 15
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
@@ -65,7 +54,7 @@ kind: Deployment
 metadata:
   name: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: backend
@@ -74,11 +63,6 @@ spec:
       labels:
         app: backend
     spec:
-      restartPolicy: Always
-      initContainers:
-        - name: wait-for-mysql
-          image: busybox:1.36
-          command: ['sh', '-c', 'echo "Waiting for MySQL..." && until nc -z mysql 3306; do sleep 3; done; echo "MySQL is up!"']
       containers:
         - name: backend
           image: bvssssrinivas/k8sbes104a:v2
@@ -86,27 +70,13 @@ spec:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true
+              value: jdbc:mysql://mysql:3306/ecommerce
             - name: SPRING_DATASOURCE_USERNAME
               value: root
             - name: SPRING_DATASOURCE_PASSWORD
               value: root
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: update
-            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
-              value: org.hibernate.dialect.MySQL8Dialect
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8080
-            initialDelaySeconds: 40
-            periodSeconds: 15
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 30
 
 # =========================
 # Frontend Deployment
@@ -117,7 +87,7 @@ kind: Deployment
 metadata:
   name: frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -126,7 +96,6 @@ spec:
       labels:
         app: frontend
     spec:
-      restartPolicy: Always
       containers:
         - name: frontend
           image: bvssssrinivas/k8sfes104a:v2
@@ -135,12 +104,6 @@ spec:
           env:
             - name: REACT_APP_BACKEND_URL
               value: http://backend:8080
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 10
 
 # =========================
 # Services
