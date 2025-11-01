@@ -97,13 +97,13 @@ spec:
               value: org.hibernate.dialect.MySQL8Dialect
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /
               port: 8080
             initialDelaySeconds: 40
             periodSeconds: 15
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /
               port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
